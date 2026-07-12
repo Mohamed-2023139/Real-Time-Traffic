@@ -3,15 +3,15 @@ services:
   # =========================
   # HIVE METASTORE DATABASE
   # =========================
-  postgres-metastore:
-    image: postgres:13
-    container_name: hive-metastore-db
-    environment:
-      POSTGRES_DB: metastore
-      POSTGRES_USER: hive
-      POSTGRES_PASSWORD: hive
-    ports:
-      - "5435:5432"
+postgres-metastore:
+  image: postgres:13
+  container_name: hive-metastore-db
+  environment:
+    POSTGRES_DB: ${POSTGRES_DB}
+    POSTGRES_USER: ${POSTGRES_USER}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  ports:
+    - "5435:5432"
 
   # =========================
   # HIVE METASTORE SERVICE
@@ -54,13 +54,17 @@ services:
   # =========================
   # SPARK WORKER
   # =========================
-  spark-worker:
-    image: apache/spark:3.5.1
-    container_name: spark-worker
-    hostname: spark-worker
-    command: >
-      bash -c "/opt/spark/sbin/start-worker.sh spark://spark-master:7077 --cores 2 --memory 2g &&
-      tail -f /opt/spark/logs/spark--org.apache.spark.deploy.worker*.out"
+spark-worker:
+  image: apache/spark:3.5.1
+  container_name: spark-worker
+  hostname: spark-worker
+  command: >
+    bash -c "/opt/spark/sbin/start-worker.sh
+    spark://${SPARK_MASTER_HOST}:${SPARK_MASTER_PORT}
+    --cores ${SPARK_WORKER_CORES}
+    --memory ${SPARK_WORKER_MEMORY}
+    &&
+    tail -f /opt/spark/logs/spark--org.apache.spark.deploy.worker*.out"
     ports:
       - "8081:8081"
       - "4040:4040"
@@ -95,13 +99,13 @@ services:
   # =========================
   # KAFKA UI
   # =========================
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
-    depends_on:
-      - kafka
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+kafka-ui:
+  image: provectuslabs/kafka-ui:latest
+  container_name: kafka-ui
+  depends_on:
+    - kafka
+  ports:
+    - "8090:8080"
+  environment:
+    KAFKA_CLUSTERS_0_NAME: ${KAFKA_CLUSTER_NAME}
+    KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
