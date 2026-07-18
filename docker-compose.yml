@@ -1,4 +1,7 @@
+version: "3.9"
+
 services:
+
   # =========================
   # HIVE METASTORE DATABASE
   # =========================
@@ -13,7 +16,7 @@ services:
       - "5435:5432"
 
   # =========================
-  # HIVE METASTORE SERVICE
+  # HIVE METASTORE
   # =========================
   hive-metastore:
     image: apache/hive:3.1.3
@@ -34,62 +37,88 @@ services:
   # SPARK MASTER
   # =========================
   spark-master:
-    image: apache/spark:3.5.1
+    build:
+      context: ./spark
+      dockerfile: Dockerfile
+    image: real-time-traffic-spark:3.5.1  
     container_name: spark-master
     hostname: spark-master
+
     command: >
       bash -c "
       /opt/spark/sbin/start-master.sh &&
       tail -f /opt/spark/logs/spark--org.apache.spark.deploy.master*.out
       "
+
     ports:
-      - "8080:8080"   # Spark Master UI
-      - "7077:7077"   # Spark Master port
+      - "8080:8080"
+      - "7077:7077"
+
     volumes:
       - ./warehouse:/opt/spark/warehouse
       - ./apps:/opt/spark-apps
-      - ./spark-ivy:/tmp/.ivy
 
   # =========================
-  # SPARK WORKER
+  # SPARK WORKER + THRIFT SERVER
   # =========================
   spark-worker:
-    image: apache/spark:3.5.1
+    build:
+      context: ./spark
+      dockerfile: Dockerfile
+    image: real-time-traffic-spark:3.5.1
     container_name: spark-worker
     hostname: spark-worker
-    command: >
-      bash -c "/opt/spark/sbin/start-worker.sh
-      spark://${SPARK_MASTER_HOST}:${SPARK_MASTER_PORT}
-      --cores ${SPARK_WORKER_CORES}
-      --memory ${SPARK_WORKER_MEMORY}
-      &&
-      tail -f /opt/spark/logs/spark--org.apache.spark.deploy.worker*.out"
+
+    depends_on:
+      - spark-master
+      - hive-metastore
+
     ports:
       - "8081:8081"
       - "4040:4040"
       - "10000:10000"
-    depends_on:
-      - spark-master
+
     volumes:
       - ./warehouse:/opt/spark/warehouse
       - ./apps:/opt/spark-apps
-      - ./spark-ivy:/tmp/.ivy
+
+    command: >
+      bash -c "
+
+      /opt/spark/sbin/start-master.sh >/dev/null 2>&1 || true;
+
+      /opt/spark/sbin/start-worker.sh spark://spark-master:7077 --cores 2 --memory 2g;
+
+      sleep 10;
+
+      /opt/spark/sbin/start-thriftserver.sh \
+        --master spark://spark-master:7077 \
+        --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension \
+        --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
+        --conf spark.sql.catalogImplementation=hive \
+        --conf spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083 \
+        --conf spark.sql.warehouse.dir=/opt/spark/warehouse;
+
+      tail -f /opt/spark/logs/*
+      "
 
   # =========================
-  # KAFKA (KRaft mode)
+  # KAFKA (KRaft)
   # =========================
   kafka:
     image: apache/kafka:latest
     container_name: kafka
+
     ports:
       - "9092:9092"
       - "29092:29092"
+
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_EXTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXTERNAL://host.docker.internal:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXTERNAL://localhost:29092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
@@ -101,10 +130,13 @@ services:
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
+
     depends_on:
       - kafka
+
     ports:
       - "8090:8080"
+
     environment:
       KAFKA_CLUSTERS_0_NAME: ${KAFKA_CLUSTER_NAME}
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
