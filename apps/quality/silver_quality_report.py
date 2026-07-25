@@ -33,7 +33,7 @@ spark.sparkContext.setLogLevel("WARN")
 silver_df = (
     spark.read
     .format("delta")
-    .load("/opt/spark/warehouse/traffic_silver")
+    .load("/warehouse/traffic_silver")
 )
 
 
@@ -234,7 +234,7 @@ quality_df = spark.createDataFrame(
     .format("delta")
     .mode("append")
     .save(
-        "/opt/spark/warehouse/silver_quality_report"
+        "/warehouse/silver_quality_report"
     )
 )
 

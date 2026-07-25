@@ -67,8 +67,8 @@ bronze_query = (
     flattened.writeStream
     .format("delta")
     .outputMode("append")
-    .option("checkpointLocation", "/opt/spark/warehouse/chk/traffic_bronze")
-    .option("path", "/opt/spark/warehouse/traffic_bronze")
+    .option("checkpointLocation", "/warehouse/chk/traffic_bronze")
+    .option("path", "/warehouse/traffic_bronze")
     .start()
 )
 

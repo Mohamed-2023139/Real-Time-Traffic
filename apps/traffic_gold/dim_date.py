@@ -19,7 +19,7 @@ def build_dim_date():
     silver = (
         spark.read
         .format("delta")
-        .load("/opt/spark/warehouse/traffic_silver")
+        .load("/warehouse/traffic_silver")
     )
 
     window = Window.orderBy("event_date")
@@ -68,7 +68,7 @@ def build_dim_date():
         dim_date.write
         .format("delta")
         .mode("overwrite")
-        .save("/opt/spark/warehouse/gold/dim_date")
+        .save("/warehouse/gold/dim_date")
     )
 
     print("Dim Date Created Successfully")

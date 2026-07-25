@@ -38,7 +38,7 @@ roads = {
 
 road_type = {
     "R100": "Highway",
-    "R200": "City Road",
+    "R200": "Bridge",
     "R300": "Main Road",
     "R400": "Express Road",
     "R500": "Highway",
@@ -82,107 +82,103 @@ road_capacity = {
 # ==========================================================
 
 maintenance_probability = {
-    "R100": 0.04,
-    "R200": 0.05,
-    "R300": 0.03,
-    "R400": 0.03,
-    "R500": 0.02,
-    "R600": 0.04,
-    "R700": 0.03,
-    "R800": 0.04
+    "R100": 0.08,
+    "R200": 0.08,
+    "R300": 0.06,
+    "R400": 0.05,
+    "R500": 0.04,
+    "R600": 0.07,
+    "R700": 0.05,
+    "R800": 0.06
 }
 
 # ==========================================================
-# Zones
+# Zones + Zone Type
 # ==========================================================
 
 road_zones = {
+
     "R100": [
-        "Nasr City",
-        "Maadi",
-        "Shubra",
-        "El Marg",
-        "Ain Shams"
+        ("Nasr City", "Residential"),
+        ("Maadi", "Residential"),
+        ("Shubra", "Residential"),
+        ("El Marg", "Residential"),
+        ("Ain Shams", "Residential")
     ],
 
     "R200": [
-        "Downtown",
-        "Dokki",
-        "Mohandessin",
-        "Zamalek",
-        "Ramses"
+        ("Downtown", "Commercial"),
+        ("Dokki", "Commercial"),
+        ("Mohandessin", "Commercial"),
+        ("Zamalek", "Commercial"),
+        ("Ramses", "Commercial")
     ],
 
     "R300": [
-        "Nasr City",
-        "Heliopolis",
-        "Airport",
-        "Ramses"
+        ("Nasr City", "Residential"),
+        ("Heliopolis", "Residential"),
+        ("Airport", "Airport"),
+        ("Ramses", "Commercial")
     ],
 
     "R400": [
-        "Maadi",
-        "Helwan",
-        "New Cairo"
+        ("Maadi", "Residential"),
+        ("Helwan", "Industrial"),
+        ("New Cairo", "Residential")
     ],
 
     "R500": [
-        "6th October",
-        "Giza"
+        ("6th October", "Residential"),
+        ("Giza", "Residential")
     ],
 
     "R600": [
-        "Maadi",
-        "Downtown",
-        "Zamalek",
-        "Shubra"
+        ("Maadi", "Residential"),
+        ("Downtown", "Commercial"),
+        ("Zamalek", "Commercial"),
+        ("Shubra", "Residential")
     ],
 
     "R700": [
-        "6th October",
-        "Mohandessin",
-        "Dokki"
+        ("6th October", "Residential"),
+        ("Mohandessin", "Commercial"),
+        ("Dokki", "Commercial")
     ],
 
     "R800": [
-        "Nasr City",
-        "Heliopolis",
-        "New Cairo"
+        ("Nasr City", "Residential"),
+        ("Heliopolis", "Residential"),
+        ("New Cairo", "Residential")
     ]
+
 }
 
 # ==========================================================
-# Weather By Season
+# Weather by Season (Weighted)
 # ==========================================================
 
 weather_by_season = {
-    "winter": [
-        "CLEAR",
-        "CLOUDY",
-        "RAIN",
-        "FOG"
-    ],
 
-    "spring": [
-        "CLEAR",
-        "CLOUDY",
-        "DUST",
-        "WINDY"
-    ],
+    "winter": (
+        ["CLEAR", "CLOUDY", "RAIN", "FOG", "STORM"],
+        [35, 30, 20, 10, 5]
+    ),
 
-    "summer": [
-        "CLEAR",
-        "HOT",
-        "DUST",
-        "WINDY"
-    ],
+    "spring": (
+        ["CLEAR", "CLOUDY", "DUST", "WINDY", "RAIN"],
+        [40, 20, 20, 15, 5]
+    ),
 
-    "autumn": [
-        "CLEAR",
-        "CLOUDY",
-        "RAIN",
-        "FOG"
-    ]
+    "summer": (
+        ["CLEAR", "HOT", "DUST", "WINDY"],
+        [55, 20, 15, 10]
+    ),
+
+    "autumn": (
+        ["CLEAR", "CLOUDY", "RAIN", "FOG"],
+        [40, 30, 20, 10]
+    )
+
 }
 
 # ==========================================================
@@ -206,13 +202,7 @@ road_weights = {
 
 years = [2023, 2024, 2025, 2026]
 
-# 2024 أكبر قليلاً ثم 2025 ثم 2023 ثم 2026
-year_weights = [
-    24,
-    34,
-    30,
-    12
-]
+year_weights = [22, 34, 30, 14]
 
 # ==========================================================
 # Egyptian Holidays
@@ -238,51 +228,54 @@ cairo = pytz.timezone("Africa/Cairo")
 # ==========================================================
 
 def generate_random_datetime():
+
     year = random.choices(
         years,
         weights=year_weights,
         k=1
     )[0]
 
-    if year == 2026:
-        month = random.randint(1, 7)
-    else:
-        month = random.randint(1, 12)
+    month = random.randint(1, 7) if year == 2026 else random.randint(1, 12)
 
     while True:
-        try:
-            if month == 2:
-                day = random.randint(1, 28)
-            elif month in [4, 6, 9, 11]:
-                day = random.randint(1, 30)
-            else:
-                day = random.randint(1, 31)
 
-            # توزيع متوازن للساعات
+        try:
+
+            day = random.randint(
+                1,
+                28 if month == 2 else
+                30 if month in [4, 6, 9, 11] else
+                31
+            )
+
             hour = random.choices(
+
                 population=list(range(24)),
+
                 weights=[
                     2,2,2,2,2,2,
                     3,
-                    7,
                     8,
+                    9,
                     6,
                     5,
                     4,
                     4,
                     4,
                     4,
-                    5,
-                    8,
+                    6,
+                    9,
+                    10,
                     9,
                     8,
-                    7,
-                    5,
+                    6,
                     4,
                     3,
                     2
                 ],
+
                 k=1
+
             )[0]
 
             minute = random.randint(0,59)
@@ -317,37 +310,39 @@ def choose_road():
 
 
 def get_season(month):
-    if month in [12, 1, 2]:
+
+    if month in [12,1,2]:
         return "winter"
-    elif month in [3, 4, 5]:
+
+    elif month in [3,4,5]:
         return "spring"
-    elif month in [6, 7, 8]:
+
+    elif month in [6,7,8]:
         return "summer"
+
     return "autumn"
 
 
 def generate_weather(dt):
-    weather = random.choice(
-        weather_by_season[get_season(dt.month)]
-    )
 
-    # أحداث نادرة
-    if random.random() < 0.02:
-        weather = "STORM"
+    weather_list, weights = weather_by_season[get_season(dt.month)]
 
-    return weather
+    return random.choices(
+        weather_list,
+        weights=weights,
+        k=1
+    )[0]
 
 
 def is_peak_hour(dt):
     return (
-        7 <= dt.hour <= 9
-        or
+        7 <= dt.hour <= 9 or
         16 <= dt.hour <= 19
     )
 
 
 def is_weekend(dt):
-    return dt.weekday() in [4, 5]
+    return dt.weekday() in [4,5]
 
 
 def is_holiday(dt):
@@ -355,7 +350,7 @@ def is_holiday(dt):
 
 
 def has_accident():
-    return random.random() < 0.02
+    return random.random() < 0.08
 
 
 def has_maintenance(road):
@@ -363,80 +358,202 @@ def has_maintenance(road):
         random.random()
         <
         maintenance_probability[road]
+    )# ==========================================================
+# Congestion Simulator
+# ==========================================================
+
+def generate_congestion(
+    road,
+    dt,
+    weather,
+    accident,
+    maintenance
+):
+
+    congestion = random.randint(1, 2)
+
+    # Morning / Evening Peak
+    if is_peak_hour(dt):
+        congestion += random.randint(2, 3)
+
+    # Weekend Night
+    if is_weekend(dt) and 18 <= dt.hour <= 23:
+        congestion += random.randint(1, 2)
+
+    # Holidays
+    if is_holiday(dt):
+        congestion += random.randint(1, 2)
+
+    # Weather Effect
+    if weather in ["RAIN", "FOG"]:
+        congestion += 1
+
+    if weather == "DUST":
+        congestion += 1
+
+    if weather == "STORM":
+        congestion += 2
+
+    # Accident
+    if accident:
+        congestion += 2
+
+    # Maintenance
+    if maintenance:
+        congestion += 1
+
+    congestion = min(
+        road_capacity[road],
+        congestion
     )
 
+    congestion = max(1, congestion)
+
+    return congestion
+
+
 # ==========================================================
-# Congestion & Speed Simulators (The Missing Functions)
+# Speed Simulator
 # ==========================================================
 
-def generate_congestion(road, dt, weather, accident, maintenance):
-    """
-    حساب مستوى الازدحام بناءً على الوقت، الطقس، الحوادث والصيانة.
-    """
-    base_congestion = random.randint(1, 2)
-    
-    # زيادة الازدحام في أوقات الذروة في الأيام العادية
-    if is_peak_hour(dt) and not is_weekend(dt) and not is_holiday(dt):
-        base_congestion += random.randint(2, 3)
-    elif is_weekend(dt) and 18 <= dt.hour <= 22:
-        base_congestion += 1
+def generate_speed(
+    road,
+    congestion,
+    weather,
+    accident,
+    maintenance
+):
 
-    if accident:
-        base_congestion += 2
-    if maintenance:
-        base_congestion += 1
+    limit = speed_limit[road]
 
-    if weather in ["RAIN", "FOG", "STORM", "DUST"]:
-        base_congestion += 1
+    if congestion == 1:
+        speed = random.randint(
+            int(limit * 0.85),
+            limit
+        )
 
-    max_cap = road_capacity.get(road, 5)
-    return min(max_cap, max(1, base_congestion))
+    elif congestion == 2:
+        speed = random.randint(
+            int(limit * 0.65),
+            int(limit * 0.85)
+        )
 
+    elif congestion == 3:
+        speed = random.randint(
+            int(limit * 0.45),
+            int(limit * 0.65)
+        )
 
-def generate_speed(road, congestion, weather, accident, maintenance):
-    """
-    توليد سرعة منطقية للسيارة بناءً على حد السرعة والازدحام والطقس.
-    """
-    limit = speed_limit.get(road, 90)
-    
-    # تأثير الازدحام على السرعة
-    congestion_modifiers = {
-        1: random.uniform(0.9, 1.1),
-        2: random.uniform(0.7, 0.9),
-        3: random.uniform(0.4, 0.6),
-        4: random.uniform(0.2, 0.4),
-        5: random.uniform(0.05, 0.15)
-    }
-    
-    modifier = congestion_modifiers.get(congestion, 0.5)
-    target_speed = limit * modifier
+    elif congestion == 4:
+        speed = random.randint(
+            int(limit * 0.20),
+            int(limit * 0.45)
+        )
 
-    # تأثير الطقس السيء
-    if weather == "STORM":
-        target_speed *= 0.5
-    elif weather in ["RAIN", "FOG"]:
-        target_speed *= 0.7
+    else:
+        speed = random.randint(
+            5,
+            int(limit * 0.20)
+        )
+
+    if weather == "RAIN":
+        speed *= 0.85
+
+    elif weather == "FOG":
+        speed *= 0.75
+
     elif weather == "DUST":
-        target_speed *= 0.85
+        speed *= 0.80
 
-    # تأثير الحوادث والصيانة
+    elif weather == "STORM":
+        speed *= 0.55
+
     if accident:
-        target_speed *= 0.6
+        speed *= 0.55
+
     if maintenance:
-        target_speed *= 0.8
+        speed *= 0.80
 
-    return int(max(5, target_speed))
+    return max(5, int(speed))
 
-# =====================================================
-# Clean Event Generator
-# =====================================================
+
+# ==========================================================
+# Traffic Risk
+# ==========================================================
+
+def calculate_risk(
+    speed,
+    congestion,
+    weather,
+    accident,
+    maintenance
+):
+
+    score = 0
+
+    if congestion >= 4:
+        score += 3
+
+    elif congestion == 3:
+        score += 2
+
+    elif congestion == 2:
+        score += 1
+
+    if speed < 20:
+        score += 3
+
+    elif speed < 40:
+        score += 2
+
+    elif speed < 60:
+        score += 1
+
+    if weather in ["RAIN", "FOG"]:
+        score += 1
+
+    if weather == "DUST":
+        score += 1
+
+    if weather == "STORM":
+        score += 3
+
+    if accident:
+        score += 3
+
+    if maintenance:
+        score += 1
+
+    if score >= 9:
+        return "Critical"
+
+    elif score >= 6:
+        return "High"
+
+    elif score >= 3:
+        return "Medium"
+
+    return "Low"
+
+
+# ==========================================================
+# Clean Event
+# ==========================================================
 
 def generate_clean_event():
+
     event_time = generate_random_datetime()
+
     road = choose_road()
-    zone = random.choice(road_zones[road])
+
+    zone, zone_type = random.choice(
+        road_zones[road]
+    )
+
     weather = generate_weather(event_time)
+
     accident = has_accident()
+
     maintenance = has_maintenance(road)
 
     congestion = generate_congestion(
@@ -455,71 +572,126 @@ def generate_clean_event():
         maintenance
     )
 
+    risk = calculate_risk(
+        speed,
+        congestion,
+        weather,
+        accident,
+        maintenance
+    )
+
     vehicle_id = fake.uuid4()
+
     vehicle_cache.append(vehicle_id)
 
     return {
+
         "vehicle_id": vehicle_id,
+
         "road_id": road,
+
+        "road_name": roads[road],
+
+        "road_type": road_type[road],
+
+        "speed_limit": speed_limit[road],
+
         "city_zone": zone,
+
+        "zone_type": zone_type,
+
         "speed": speed,
+
         "congestion_level": congestion,
+
         "weather": weather,
+
+        "traffic_risk": risk,
+
+        "accident": accident,
+
+        "maintenance": maintenance,
+
         "event_time": event_time.isoformat()
+
     }
 
 
-# =====================================================
-# Dirty Event Generator
-# =====================================================
+# ==========================================================
+# Dirty Event
+# ==========================================================
 
 def generate_dirty_event():
+
     dirty_type = random.choice([
+
         "null_speed",
+
         "negative_speed",
+
         "extreme_speed",
+
         "duplicate_vehicle",
+
         "late_event",
+
         "future_event",
+
         "wrong_datatype",
+
         "schema_drift",
+
         "corrupt_json"
+
     ])
 
     base = generate_clean_event()
 
     if dirty_type == "null_speed":
+
         base["speed"] = None
 
     elif dirty_type == "negative_speed":
-        base["speed"] = -50
+
+        base["speed"] = -25
 
     elif dirty_type == "extreme_speed":
-        base["speed"] = 350
 
-    elif dirty_type == "duplicate_vehicle" and vehicle_cache:
-        base["vehicle_id"] = random.choice(vehicle_cache)
+        base["speed"] = 280
+
+    elif dirty_type == "duplicate_vehicle":
+
+        if vehicle_cache:
+            base["vehicle_id"] = random.choice(vehicle_cache)
 
     elif dirty_type == "late_event":
+
         dt = datetime.fromisoformat(
             base["event_time"]
         )
+
         dt -= timedelta(
-            minutes=random.randint(30, 180)
+            minutes=random.randint(30,180)
         )
+
         base["event_time"] = dt.isoformat()
 
     elif dirty_type == "future_event":
+
         dt = datetime.now(pytz.utc)
+
         dt += timedelta(
-            minutes=random.randint(30, 180)
+            minutes=random.randint(30,180)
         )
+
         base["event_time"] = dt.isoformat()
 
     elif dirty_type == "wrong_datatype":
+
         base["speed"] = "FAST"
 
     elif dirty_type == "schema_drift":
+
         base["road_condition"] = random.choice([
             "GOOD",
             "BAD",
@@ -527,50 +699,66 @@ def generate_dirty_event():
         ])
 
     elif dirty_type == "corrupt_json":
+
         return "###CORRUPTED_EVENT###"
 
     return base
 
 
-# =====================================================
+# ==========================================================
 # Streaming Loop
-# =====================================================
+# ==========================================================
 
 print("=" * 60)
-print("Traffic Producer Started...")
+print("Traffic Producer Started")
 print("=" * 60)
 
 while True:
-    # 85% Clean
-    # 15% Dirty
+
     if random.random() < 0.85:
+
         event = generate_clean_event()
+
     else:
+
         event = generate_dirty_event()
 
     if isinstance(event, str):
+
         producer.send(
             "traffic-topic",
             value={"raw": event}
         )
+
         print("CORRUPTED EVENT")
+
     else:
+
         producer.send(
             "traffic-topic",
             value=event
         )
+
         print(
+
             f"[{event['event_time'][:19]}] "
+
             f"{event['road_id']} | "
+
             f"{event['city_zone']} | "
+
             f"{event['weather']} | "
+
             f"{event['speed']} km/h | "
-            f"Cong={event['congestion_level']}"
+
+            f"Cong={event['congestion_level']} | "
+
+            f"{event['traffic_risk']}"
+
         )
 
     producer.flush()
 
-    # معدل وصول الأحداث
     time.sleep(
-        random.uniform(0.4, 1.2)
+        random.uniform(0.3, 1.0)
     )

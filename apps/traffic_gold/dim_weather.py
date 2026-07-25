@@ -2,21 +2,14 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.window import Window
 
-
 def build_dim_weather():
 
     spark = (
         SparkSession.builder
         .appName("DimWeather")
         .master("spark://spark-master:7077")
-        .config(
-            "spark.sql.extensions",
-            "io.delta.sql.DeltaSparkSessionExtension"
-        )
-        .config(
-            "spark.sql.catalog.spark_catalog",
-            "org.apache.spark.sql.delta.catalog.DeltaCatalog"
-        )
+        .config("spark.sql.extensions","io.delta.sql.DeltaSparkSessionExtension")
+        .config("spark.sql.catalog.spark_catalog","org.apache.spark.sql.delta.catalog.DeltaCatalog")
         .enableHiveSupport()
         .getOrCreate()
     )
@@ -24,10 +17,12 @@ def build_dim_weather():
     silver = (
         spark.read
         .format("delta")
-        .load("/opt/spark/warehouse/traffic_silver")
+        .load("/warehouse/traffic_silver")
     )
 
     window = Window.orderBy("weather")
+
+    weather = upper(col("weather"))
 
     dim_weather = (
         silver
@@ -36,10 +31,33 @@ def build_dim_weather():
 
         .withColumn(
             "weather_group",
-            when(col("weather").isin("Sunny", "Clear"), "Clear")
-            .when(col("weather").isin("Rain", "Storm"), "Rainy")
-            .when(col("weather").isin("Fog", "Mist"), "Foggy")
+            when(weather=="CLEAR","Clear")
+            .when(weather.isin("RAIN","STORM"),"Rainy")
+            .when(weather=="FOG","Foggy")
             .otherwise("Other")
+        )
+
+        .withColumn(
+            "visibility",
+            when(weather=="CLEAR","High")
+            .when(weather=="RAIN","Medium")
+            .when(weather=="FOG","Low")
+            .otherwise("Very Low")
+        )
+
+        .withColumn(
+            "road_condition",
+            when(weather=="CLEAR","Dry")
+            .when(weather=="RAIN","Wet")
+            .when(weather=="FOG","Moist")
+            .otherwise("Slippery")
+        )
+
+        .withColumn(
+            "driving_condition",
+            when(weather=="CLEAR","Good")
+            .when(weather=="FOG","Moderate")
+            .otherwise("Poor")
         )
 
         .withColumn(
@@ -50,7 +68,10 @@ def build_dim_weather():
         .select(
             "weather_key",
             "weather",
-            "weather_group"
+            "weather_group",
+            "visibility",
+            "road_condition",
+            "driving_condition"
         )
     )
 
@@ -58,11 +79,10 @@ def build_dim_weather():
         dim_weather.write
         .format("delta")
         .mode("overwrite")
-        .save("/opt/spark/warehouse/gold/dim_weather")
+        .save("/warehouse/gold/dim_weather")
     )
 
-    print("✅ Dim_Weather Created Successfully")
-
+    print("Dim Weather Created Successfully")
 
 if __name__ == "__main__":
     build_dim_weather()

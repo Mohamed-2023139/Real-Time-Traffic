@@ -28,23 +28,23 @@ spark.sparkContext.setLogLevel("WARN")
 # ==========================
 
 fact = spark.read.format("delta").load(
-    "/opt/spark/warehouse/gold/fact_traffic"
+    "/warehouse/gold/fact_traffic"
 )
 
 dim_road = spark.read.format("delta").load(
-    "/opt/spark/warehouse/gold/dim_road"
+    "/warehouse/gold/dim_road"
 )
 
 dim_zone = spark.read.format("delta").load(
-    "/opt/spark/warehouse/gold/dim_zone"
+    "/warehouse/gold/dim_zone"
 )
 
 dim_weather = spark.read.format("delta").load(
-    "/opt/spark/warehouse/gold/dim_weather"
+    "/warehouse/gold/dim_weather"
 )
 
 dim_date = spark.read.format("delta").load(
-    "/opt/spark/warehouse/gold/dim_date"
+    "/warehouse/gold/dim_date"
 )
 
 # ==========================

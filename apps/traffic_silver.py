@@ -31,7 +31,7 @@ spark.sparkContext.setLogLevel("WARN")
 bronze_df = (
     spark.readStream
     .format("delta")
-    .load("/opt/spark/warehouse/traffic_bronze")
+    .load("/warehouse/traffic_bronze")
 )
 
 # =====================================================
@@ -173,11 +173,11 @@ silver_query = (
     .outputMode("append")
     .option(
         "checkpointLocation",
-        "/opt/spark/warehouse/chk/traffic_silver"
+        "/warehouse/chk/traffic_silver"
     )
     .option(
         "path",
-        "/opt/spark/warehouse/traffic_silver"
+        "/warehouse/traffic_silver"
     )
     .start()
 )
@@ -192,11 +192,11 @@ quarantine_query = (
     .outputMode("append")
     .option(
         "checkpointLocation",
-        "/opt/spark/warehouse/chk/traffic_quarantine"
+        "/warehouse/chk/traffic_quarantine"
     )
     .option(
         "path",
-        "/opt/spark/warehouse/traffic_quarantine"
+        "/warehouse/traffic_quarantine"
     )
     .start()
 )

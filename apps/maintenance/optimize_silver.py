@@ -23,7 +23,7 @@ spark = (
 
 spark.sparkContext.setLogLevel("WARN")
 
-SILVER_PATH = "/opt/spark/warehouse/traffic_silver"
+SILVER_PATH = "/warehouse/traffic_silver"
 
 print("=" * 60)
 print("Starting Silver Maintenance")

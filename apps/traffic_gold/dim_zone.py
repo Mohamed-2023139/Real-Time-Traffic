@@ -2,27 +2,27 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.window import Window
 
-
-spark = (
-    SparkSession.builder
-    .appName("DimZone")
-    .master("spark://spark-master:7077")
-    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
-    .enableHiveSupport()
-    .getOrCreate()
-)
-
-
 def build_dim_zone():
+
+    spark = (
+        SparkSession.builder
+        .appName("DimZone")
+        .master("spark://spark-master:7077")
+        .config("spark.sql.extensions","io.delta.sql.DeltaSparkSessionExtension")
+        .config("spark.sql.catalog.spark_catalog","org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        .enableHiveSupport()
+        .getOrCreate()
+    )
 
     silver = (
         spark.read
         .format("delta")
-        .load("/opt/spark/warehouse/traffic_silver")
+        .load("/warehouse/traffic_silver")
     )
 
     window = Window.orderBy("city_zone")
+
+    zone = upper(col("city_zone"))
 
     dim_zone = (
         silver
@@ -31,16 +31,32 @@ def build_dim_zone():
 
         .withColumn(
             "zone_type",
-            when(col("city_zone") == "CBD", "Commercial")
-            .when(col("city_zone") == "TECHPARK", "IT Hub")
-            .when(col("city_zone").isin("AIRPORT", "TRAINSTATION"), "Transit Hub")
+            when(zone.isin("CBD","DOWNTOWN"),"Commercial")
+            .when(zone.isin("AIRPORT","TRAINSTATION"),"Transit Hub")
+            .when(zone=="TECHPARK","Technology")
+            .when(zone=="INDUSTRIAL","Industrial")
+            .when(zone=="UNIVERSITY","Education")
             .otherwise("Residential")
         )
 
         .withColumn(
             "traffic_risk",
-            when(col("city_zone").isin("CBD", "AIRPORT", "TRAINSTATION"), "High")
-            .when(col("city_zone") == "TECHPARK", "Medium")
+            when(zone.isin("CBD","AIRPORT"),"High")
+            .when(zone.isin("TECHPARK","TRAINSTATION"),"Medium")
+            .otherwise("Low")
+        )
+
+        .withColumn(
+            "population_density",
+            when(zone.isin("CBD","DOWNTOWN"),"High")
+            .when(zone.isin("TECHPARK","UNIVERSITY"),"Medium")
+            .otherwise("Low")
+        )
+
+        .withColumn(
+            "business_activity",
+            when(zone.isin("CBD","DOWNTOWN"),"High")
+            .when(zone=="TECHPARK","Medium")
             .otherwise("Low")
         )
 
@@ -53,7 +69,9 @@ def build_dim_zone():
             "zone_key",
             "city_zone",
             "zone_type",
-            "traffic_risk"
+            "traffic_risk",
+            "population_density",
+            "business_activity"
         )
     )
 
@@ -61,11 +79,10 @@ def build_dim_zone():
         dim_zone.write
         .format("delta")
         .mode("overwrite")
-        .save("/opt/spark/warehouse/gold/dim_zone")
+        .save("/warehouse/gold/dim_zone")
     )
 
     print("Dim Zone Created Successfully")
-
 
 if __name__ == "__main__":
     build_dim_zone()

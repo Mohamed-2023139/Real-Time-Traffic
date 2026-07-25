@@ -29,7 +29,7 @@ def build_fact_traffic():
     silver = (
         spark.read
         .format("delta")
-        .load("/opt/spark/warehouse/traffic_silver")
+        .load("/warehouse/traffic_silver")
     )
 
     # ==========================
@@ -39,25 +39,25 @@ def build_fact_traffic():
     dim_date = (
         spark.read
         .format("delta")
-        .load("/opt/spark/warehouse/gold/dim_date")
+        .load("/warehouse/gold/dim_date")
     )
 
     dim_road = (
         spark.read
         .format("delta")
-        .load("/opt/spark/warehouse/gold/dim_road")
+        .load("/warehouse/gold/dim_road")
     )
 
     dim_zone = (
         spark.read
         .format("delta")
-        .load("/opt/spark/warehouse/gold/dim_zone")
+        .load("/warehouse/gold/dim_zone")
     )
 
     dim_weather = (
         spark.read
         .format("delta")
-        .load("/opt/spark/warehouse/gold/dim_weather")
+        .load("/warehouse/gold/dim_weather")
     )
 
     # ==========================
@@ -144,7 +144,7 @@ def build_fact_traffic():
         fact.write
         .format("delta")
         .mode("overwrite")
-        .save("/opt/spark/warehouse/gold/fact_traffic")
+        .save("/warehouse/gold/fact_traffic")
     )
 
     print("Fact Traffic Created Successfully")
