@@ -209,26 +209,10 @@ The project consists of the following Docker containers:
 ---
 
 
-# 👨‍💻 Author
-
-**Mohamed Yasser**
-
-Faculty of Computers and Data Science
-
-Alexandria University
-
-**GitHub**
-
-https://github.com/Mohamed-2023139
+## ☕ Stay Connected
+Let's stay in touch! Feel free to connect with us:  
 
 **LinkedIn**
 
-https://www.linkedin.com/in/mohamed-yasser-5a56672ab/
+[![Mohamed Yasser ](https://img.shields.io/badge/LinkedIn-Mohamed_Yasser-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/mohamed-yasser-5a56672ab/)
 
----
-
-# ⭐ Support
-
-If you found this project useful, consider giving it a **Star ⭐** on GitHub.
-
-Thank you for visiting this repository!
