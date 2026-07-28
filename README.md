@@ -108,3 +108,127 @@ Dashboard includes:
 - Traffic Volume by Zone
 
 ---
+
+# 📂 Repository Structure
+
+```text
+Real-Time-Traffic/
+│
+├── apps/
+│   ├── bronze/
+│   │   └── traffic_bronze.py
+│   │
+│   ├── silver/
+│   │   └── traffic_silver.py
+│   │
+│   ├── gold/
+│   │   ├── dimensions/
+│   │   ├── fact_tables/
+│   │   └── ...
+│   │
+│   ├── maintenance/
+│   │   └── optimize_silver.py
+│   │
+│   └── quality/
+│       ├── silver_quality_report.py
+│       └── gold_validation.py
+│
+├── producer/
+│   └── producer.py
+│
+├── hive-conf/
+│   ├── Dockerfile
+│   └── hive-site.xml
+│
+├── spark/
+│   ├── Dockerfile
+│   └── spark-conf/
+│       └── spark-defaults.conf
+│
+├── warehouse/
+│   ├── chk/
+│   ├── traffic_bronze/
+│   ├── traffic_silver/
+│   ├── traffic_quarantine/
+│   ├── gold/
+│   └── silver_quality_report/
+│
+├── PowerBI/
+│   ├── Real_Time_Traffic.pbix
+│   └── dashboard.png
+│
+├── Pipeline.png
+├── star-schema.png
+├── docker-compose.yml
+├── .env
+├── README.md
+└── LICENSE
+```
+
+---
+
+# 🚀 Getting Started
+
+### Clone the repository
+
+```bash
+git clone https://github.com/Mohamed-2023139/Real-Time-Traffic.git
+```
+
+### Navigate to the project directory
+
+```bash
+cd Real-Time-Traffic
+```
+
+### Build and start all services
+
+```bash
+docker compose up -d --build
+```
+
+### Verify running services
+
+```bash
+docker ps
+```
+
+---
+
+# 🐳 Docker Services
+
+The project consists of the following Docker containers:
+
+- Apache Kafka
+- Spark Master
+- Spark Worker
+- Spark Thrift Server
+- Hive Metastore
+- PostgreSQL (Hive Metastore Database)
+
+---
+
+
+# 👨‍💻 Author
+
+**Mohamed Yasser**
+
+Faculty of Computers and Data Science
+
+Alexandria University
+
+**GitHub**
+
+https://github.com/Mohamed-2023139
+
+**LinkedIn**
+
+https://www.linkedin.com/in/mohamed-yasser-5a56672ab/
+
+---
+
+# ⭐ Support
+
+If you found this project useful, consider giving it a **Star ⭐** on GitHub.
+
+Thank you for visiting this repository!
