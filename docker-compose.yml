@@ -165,5 +165,4 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       
 volumes:
-  metastore_db:
-  grafana-storage:    
+  metastore_db:   
